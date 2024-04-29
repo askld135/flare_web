@@ -29,14 +29,14 @@ def remove_flare(model, image):
 
 
     if min(h, w) >= 2048:
-        inputs = T.functional.center_crop(inputs, [2048,2048])
+        inputs = T.functional.center_crop(inputs, [2048,2048])  # resize
         inputs_low = F.interpolate(inputs, (512,512), mode='area')
         pred_scene_low = model(inputs_low).clamp(0.0, 1.0)
         pred_flare_low = synthesis.remove_flare(inputs_low, pred_scene_low)
         pred_flare = T.functional.resize(pred_flare_low, [2048,2048], antialias=True)
         pred_scene = synthesis.remove_flare(inputs, pred_flare)
     else:
-        inputs = T.functional.center_crop(inputs, [512,512])
+        inputs = T.functional.center_crop(inputs, [512,512])    # resize
         pred_scene = model(inputs).clamp(0.0, 1.0)
         pred_flare = synthesis.remove_flare(inputs, pred_scene)
 
