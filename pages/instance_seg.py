@@ -40,9 +40,9 @@ else:
         ins_model = init_detector(config=config_path, checkpoint=weight_path, device='cuda')
             
         pred = get_detected_img(ins_model, removed_image)
-        breakpoint()
+        
         ins_dir = './ins_dir'
         os.makedirs(ins_dir, exist_ok=True)
         ins_path = os.path.join(ins_dir, f'ins.png')
-        plt.imsave(ins_dir, pred)
+        plt.imsave(ins_path, pred)
         columns[1].image(Image.open('./ins_dir/ins.png'), caption="Instance Segmentation", use_column_width=True)
