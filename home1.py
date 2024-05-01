@@ -41,7 +41,7 @@ if selected =="Home":
     with empty1:
         empty()
     with con1:
-        tab1, tab2, tab3,tab4 = st.tabs(["Introduction" ,"flare remove", "segmentation", "depth estimation"])
+        tab1, tab2, tab3,tab4 = st.tabs(["Introduction" ,"Flare Remove", "Instance Segmentation", "Depth Estimation"])
         
         with tab1:
             empty1,con1,empty2 = st.columns([0.1,1.0,0.1])
@@ -85,7 +85,7 @@ if selected =="Home":
             with empty1:
                 empty()
             with con1:
-                st.title("Flare remove")
+                st.title("Flare Remove")
                 st.markdown(
             """
             #### 설명
@@ -103,13 +103,17 @@ if selected =="Home":
                 empty()
             with con1:
                 st.title("Instance Segmentation")
+                st.image("./image/segmentation_1.png")
                 st.markdown(
             """
-            #### 설명
-            
+            #### 개별 객체마다 클래스 분류 / 객체 분할을 수행하는 연구 분야
+            ##### Object Detection 기술과 Semantic Segmentation 주요 특징을 합친 형태  
+            - semantic segmentation의 경우, 각 픽셀마다 어떤 클래스에 해당하는지 판별합니다. 
+            이때, 객체마다 수행하는 것이 아니기 때문에 사진에서는 양이 세 마리가 존재하지만, 결과를 보시면 하나의 덩어리로 양이라고 판별합니다.
+            - 하지만 instance segmentation의 경우에 개별 객체에 대한 분할이 이루어지며, 양 세마리를 구분한 것을 확인할 수 있습니다.
             """
             )
-                st.image("./image/segmentation.png")    
+                st.image("./image/instance_segmentation.png")    
             
             with empty2:
                 empty()
@@ -123,8 +127,8 @@ if selected =="Home":
                 st.title("Depth Estimation")
                 st.markdown(
             """
-            #### 설명
-            
+            #### 주어진 영상에서 3차원 공간에서의 깊이 정보를 측정하는 task
+            - 자율주행, 로봇 비전, 환경 인식 등 다양한 분야에서 활용
             """
             )
                 st.image("./image/depth.png")    
@@ -145,15 +149,15 @@ if selected == "Task":
         model = NAFNet().to(device)
          
         
-        selected2 = option_menu(None, ["flare removal", "segmentation","depth estimation"], 
+        selected2 = option_menu(None, ["Flare Removal", "Instance Segmentation","Depth Estimation"], 
             icons=['bi bi-sun', 'bi bi-search', "bi bi-rulers"], 
             menu_icon="cast", default_index=0, orientation="horizontal")
     
     
     
-        if selected2 == "flare removal":
+        if selected2 == "Flare Removal":
             
-            st.title("flare removal")
+            st.title("Flare Removal")
             file = st.file_uploader( "이미지를 올려주세요",type = ['jpg', 'png'])  # 파일을 첨부하는 영역
 
             to_tensor = transforms.ToTensor()
@@ -174,9 +178,9 @@ if selected == "Task":
                 columns[1].image(Image.open('./result/pred_blend/test.jpg'), caption="Removed Flare", use_column_width=True)
     
     
-        elif selected2 == "segmentation":
+        elif selected2 == "Instance Segmentation":
             
-            st.title("segmentation")
+            st.title("Instance Segmentation")
             file = st.file_uploader( "이미지를 올려주세요",type = ['jpg', 'png'])  # 파일을 첨부하는 영역
 
             to_tensor = transforms.ToTensor()
@@ -212,8 +216,8 @@ if selected == "Task":
             
             
                 
-        elif selected2 =="depth estimation":
-            st.title("depth estmation")
+        elif selected2 =="Depth Estimation":
+            st.title("Depth Estmation")
             file = st.file_uploader( "이미지를 올려주세요",type = ['jpg', 'png'])  # 파일을 첨부하는 영역
 
             to_tensor = transforms.ToTensor()
