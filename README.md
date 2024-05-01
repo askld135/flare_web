@@ -10,10 +10,13 @@
    ```
    streamlit run home.py --server.port=80
    ```
+   and Change the name of the page file to pages.
    if you want to run home1.py
    ```
-   streamlit run home1.py --server.enableXsrfProtection false
+   streamlit run home1.py --server.port=80
    ```
+   and Change the name of the pages file to page.
+   
 2. Converting Local to Global with ngrok
    ```
    ngrok http 80
