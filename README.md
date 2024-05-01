@@ -10,6 +10,10 @@
    ```
    streamlit run home.py --server.port=80
    ```
+   if you want to run home1.py
+   ```
+   streamlit run home1.py --server.enableXsrfProtection false
+   ```
 2. Converting Local to Global with ngrok
    ```
    ngrok http 80
