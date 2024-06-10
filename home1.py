@@ -64,7 +64,7 @@ if selected =="Home":
             
             #### 플레어제거 프로그램의 필요성
             기존의 카메라 빞 번짐 제거 기술은 **물리적인 방법**을 사용하는 것이 대부분이지만, 이는 많은 비용이 들며, 렌즈의 흠집이난 지문등으로 발생한 빛번짐을 제거할 수 없다.  
-            #### &rarr; :red[**소프트 웨어적인 방법이 필요하다.**]
+            #### &rarr; :red[**소프트 웨어적인 방법이 필요**]
             """
             )
                 
@@ -86,14 +86,58 @@ if selected =="Home":
                 empty()
             with con1:
                 st.title("Flare Remove")
+                st.image("./image/flare_removal.png")
                 st.markdown(
             """
-            #### 설명
-            
+            #### 기존의 연구
+            ##### How to Train Neural Networks for Flare Removal
+            """
+            )  
+                st.image("./image/flare_removal_1.png") 
+                st.markdown(
+            """
+            - 빛 번짐 제거 학습을 위한 데이터셋을 증강시키기 위해 Clean image에 Flare를 합성시키는 방식을 사용  
+            합성한 이미지를 U-Net구조의 플레어 제거 네트워크에 넣어 플레어를 제거한 이미지를 얻음.
+            - 장면 내에 광원이 포함되었을 때 발생하는 어려움을 masking 기법을 이용해 해결  
             """
             )
-                st.image("./image/flare_removal.png")    
+                st.markdown(
+            """ 
+            #### 수행 방법
+            ##### 1. Network 변경 : **U-Net구조 &rarr; NaFNet**
+            """        
+            )
+                st.image("./image/flare_removal_2.png")
+                st.markdown(
+            """
+            -  Image Restoration 분야에서 좋은 성능을 보이는 Deep Learning 네트워크로 비선형 활성화 함수를 사용하지 않음으로 인해 **연산량 감소** 및 **구조 단순화**
+            ##### 2. 데이터 전처리 : NAFNet 구조의 모델이 여러 개의 광원을 인식하지 못하는 문제를 해결하기 위한 기법
+            """        
+            )
+                st.image("./image/flare_removal_3.png")
+                st.markdown(
+            """
+            How to Train Neural Networks for Flare Removal에서의 플레어 합성 이미지는 이미지 하나당 플레어가 하나가 합성된다.  
+            NAFNet 구조의 모델이 여러 개의 광원을 인식하지 못하는 문제를 해결하기 위하여 무작위로 여러 개의 빛 번짐을 합성하여 학습한다.  
+            광원이 많은 경우 보통 작은 광원이 여럿 찍히는 경우가 일반적이므로 광원 수에 따라 광원의 크기를 제한한다.  
             
+            ##### 3. Loss 추가
+            """
+            )
+                st.image("./image/flare_removal_4.png")
+                st.markdown(
+            """
+            - 모델을 통해 빛 번짐을 제거한 사진과 annotation(광원)을 배경 이미지에 합성한 사진을 비교하는 손실함수  
+
+            마스킹되어 비교되지 않은 부분에 대한 손실을 계산하여 더 풍부한 정보를 제공한다.
+            - **SSIM**과 **L1**을 결합한 형태의 새로운 손실함수 도입, 기존 손실함수와 **1:2**의 비율
+            
+            ##### 4. 실험 결과
+            """        
+            )
+                st.image("./image/flare_removal_5.png")
+                st.image("./image/flare_removal_6.png")
+                
             with empty2:
                 empty()
         with tab3:
@@ -108,12 +152,12 @@ if selected =="Home":
             """
             #### 개별 객체마다 클래스 분류 / 객체 분할을 수행하는 연구 분야
             ##### Object Detection 기술과 Semantic Segmentation 주요 특징을 합친 형태  
-            - semantic segmentation의 경우, 각 픽셀마다 어떤 클래스에 해당하는지 판별합니다. 
+            - Semantic Segmentation의 경우, 각 픽셀마다 어떤 클래스에 해당하는지 판별합니다. 
             이때, 객체마다 수행하는 것이 아니기 때문에 사진에서는 양이 세 마리가 존재하지만, 결과를 보시면 하나의 덩어리로 양이라고 판별합니다.
-            - 하지만 instance segmentation의 경우에 개별 객체에 대한 분할이 이루어지며, 양 세마리를 구분한 것을 확인할 수 있습니다.
+            - 하지만 Instance Segmentation의 경우에 개별 객체에 대한 분할이 이루어지며, 양 세마리를 구분한 것을 확인할 수 있습니다.
             """
             )
-                st.image("./image/instance_segmentation.png")    
+                st.image("./image/instance_segmentation.png") 
             
             with empty2:
                 empty()
@@ -163,7 +207,7 @@ if selected == "Task":
             to_tensor = transforms.ToTensor()
 
             if file is None:
-                st.text('이미지를 올려주세요')
+                st.text('')
             else:
             # 원본 이미지와 빛번짐 제거 결과를 나란히 배치
                 columns = st.columns(2)  # 이미지를 2개의 칼럼에 배치하도록 설정
@@ -186,7 +230,7 @@ if selected == "Task":
             to_tensor = transforms.ToTensor()
 
             if file is None:
-                st.text('이미지를 올려주세요')
+                st.text('')
             else:
             # 원본 이미지와 빛번짐 제거 결과를 나란히 배치
                 columns = st.columns(2)  # 이미지를 2개의 칼럼에 배치하도록 설정
@@ -223,7 +267,7 @@ if selected == "Task":
             to_tensor = transforms.ToTensor()
 
             if file is None:
-                st.text('이미지를 올려주세요')
+                st.text('')
             else:
              # 원본 이미지와 빛번짐 제거 결과를 나란히 배치
                  columns = st.columns(2)
