@@ -130,7 +130,7 @@ if selected =="Home":
             - 모델을 통해 빛 번짐을 제거한 사진과 annotation(광원)을 배경 이미지에 합성한 사진을 비교하는 손실함수  
 
             마스킹되어 비교되지 않은 부분에 대한 손실을 계산하여 더 풍부한 정보를 제공한다.
-            - **SSIM**과 **L1**을 결합한 형태의 새로운 손실함수 도입, 기존 손실함수와 **1:2**의 비율
+            - **SSIM**과 **L1**을 결합한 형태의 새로운 손실함수 도입, 기존 손실함수와 **1:2**의 비율로 사용
             
             ##### 4. 실험 결과
             """        
@@ -152,12 +152,40 @@ if selected =="Home":
             """
             #### 개별 객체마다 클래스 분류 / 객체 분할을 수행하는 연구 분야
             ##### Object Detection 기술과 Semantic Segmentation 주요 특징을 합친 형태  
-            - Semantic Segmentation의 경우, 각 픽셀마다 어떤 클래스에 해당하는지 판별합니다. 
+            - Semantic Segmentation의 경우, 각 픽셀마다 어떤 클래스에 해당하는지 판별한다. 
             이때, 객체마다 수행하는 것이 아니기 때문에 사진에서는 양이 세 마리가 존재하지만, 결과를 보시면 하나의 덩어리로 양이라고 판별합니다.
             - 하지만 Instance Segmentation의 경우에 개별 객체에 대한 분할이 이루어지며, 양 세마리를 구분한 것을 확인할 수 있습니다.
             """
             )
                 st.image("./image/instance_segmentation.png") 
+                st.markdown(
+            """
+            #### 수행방법
+            ##### Spatial Attention
+            """        
+            )
+                st.image('./image/Spatial_Attention.png')
+                st.markdown(
+            """
+            이미지의 **공간적 위치**에 대한 중요도를 학습하여, **모델이 더 중요한 부분에 집중하도록 유도한다.**
+            - 빛 번짐이 존재하는 이미지에서 좋은 특징을 추출할 구 있도록 하여 빛번짐에 강건한 모델을 설계
+            
+            ##### Spatial Attention ResNet
+            """        
+            )
+                st.image('./image/Spatial_Attention_ResNet.png')
+                st.markdown(
+            """
+            - ResNet-50 4개의 레이어 중 마지막 레이어 만을 제외하고 적용
+            - 사전 학습된 ResNet-50 가중치 사용
+            ##### 실험 결과
+            - Flare-corrupted COCO 데이터세트 학습 (train: 약 118,000장, val: 5,000장)
+            - ResNet-50 백본, Light SOLOv2 모델 사용
+            - Heatmap을 통해 공간 어텐션을 적용한 모델이 더욱 특징을 잘 추출하는 것 확인
+            """        
+            )
+                st.image('./image/segmentation_result.png')
+                st.image('./image/segmentation_result2.png')
             
             with empty2:
                 empty()
