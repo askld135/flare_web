@@ -15,11 +15,14 @@ from mmdet.registry import VISUALIZERS
 
 from dpt.models import DPTDepthModel
 from dpt.transforms import Resize, NormalizeImage, PrepareForNet
+import matplotlib as mpl
+import matplotlib.cm as cm
 
 import torch
 import torchvision.transforms as transforms
 from PIL import Image, ImageOps
 import numpy as np
+import networks
 from networks import *
 import remove_flare
 import utils
@@ -41,7 +44,7 @@ if selected =="Home":
     with empty1:
         empty()
     with con1:
-        tab1, tab2, tab3,tab4 = st.tabs(["Introduction" ,"Flare Remove", "Instance Segmentation", "Depth Estimation"])
+        tab1, tab2, tab3, tab4 = st.tabs(["Introduction" ,"Flare Remove", "Instance Segmentation", "Depth Estimation"])
         
         with tab1:
             empty1,con1,empty2 = st.columns([0.1,1.0,0.1])
@@ -152,9 +155,9 @@ if selected =="Home":
             """
             #### 개별 객체마다 클래스 분류 / 객체 분할을 수행하는 연구 분야
             ##### Object Detection 기술과 Semantic Segmentation 주요 특징을 합친 형태  
-            - Semantic Segmentation의 경우, 각 픽셀마다 어떤 클래스에 해당하는지 판별한다. 
-            이때, 객체마다 수행하는 것이 아니기 때문에 사진에서는 양이 세 마리가 존재하지만, 결과를 보시면 하나의 덩어리로 양이라고 판별합니다.
-            - 하지만 Instance Segmentation의 경우에 개별 객체에 대한 분할이 이루어지며, 양 세마리를 구분한 것을 확인할 수 있습니다.
+            - Semantic Segmentation의 경우, 각 픽셀마다 어떤 클래스에 해당하는지 판별
+            이때, 객체마다 수행하는 것이 아니기 때문에 사진에서는 양이 세 마리가 존재하지만, 결과를 보시면 하나의 덩어리로 양이라고 판별한다.
+            - 하지만 Instance Segmentation의 경우에 개별 객체에 대한 분할이 이루어지며, 양 세마리를 구분한 것을 확인할 수 있다.
             """
             )
                 st.image("./image/instance_segmentation.png") 
@@ -204,6 +207,32 @@ if selected =="Home":
             """
             )
                 st.image("./image/depth.png")    
+                st.markdown(
+            """
+            #### 수행 방법
+            ##### MonoDepth2
+            - GT 없이 연속적인 프레임의 이미지를 활용하여 학습하는 모델로 Depth를 예측하기 위해 depth 및 pose를 예측하는 네트워크들을 활용
+            """        
+            )
+                st.image('./image/depth_estimation1.png')
+                st.markdown(
+            """
+            - Depth Net의 입력 이미지로 Flare 이미지를 사용
+            - Flare Robust한 모델을 만드는 것이 목표이므로 Pose Net의 입력으로는 Clean 이미지를 계속 사용
+            - 연속된 프레임으로부터 Transformation matrix 출력
+            ##### Distillation
+            """        
+            )
+                st.image('./image/Distillation.png')
+                st.markdown(
+            """
+            - Clean 이미지로만 학습한 네트워크에서의 Decoder 파라미터를 Flare로 학습하는 Decoder에 distillation 진행  
+            
+            Flare로 학습되는 네트워크의 파라미터가 Clean한 이미지로 학습되는 네트워크에 영향을 끼치게 않게 한다.
+            ##### 실험 결과
+            """        
+            )
+                st.image('./image/depth_estimation_result.png')
             
             with empty2:
                 empty()
@@ -221,8 +250,8 @@ if selected == "Task":
         model = NAFNet().to(device)
          
         
-        selected2 = option_menu(None, ["Flare Removal", "Instance Segmentation","Depth Estimation"], 
-            icons=['bi bi-sun', 'bi bi-search', "bi bi-rulers"], 
+        selected2 = option_menu(None, ["Flare Removal", "Instance Segmentation", "Depth Estimation", "2-Stage Instance Segmentation", "2-Stage Depth Estimation"], 
+            icons=['bi bi-sun', 'bi bi-search', "bi bi-rulers", 'bi bi-search', "bi bi-rulers"], 
             menu_icon="cast", default_index=0, orientation="horizontal")
     
     
@@ -269,8 +298,8 @@ if selected == "Task":
                 results = remove_flare.remove_flare(model, img)
                 utils.save_outputs(results, 'test')
 
-                config_path = './pretrained/rtmdet-ins_x_8xb16-300e_coco.py'
-                weight_path = './pretrained/rtmdet-ins_x_8xb16-300e_coco_20221124_111313-33d4595b.pth'
+                config_path = './pretrained/config.py'
+                weight_path = './pretrained/solov2.pth'
     
                 removed_image_path = os.path.join('./result/pred_blend', 'test.jpg')
                 removed_image = cv2.imread(removed_image_path)
@@ -290,6 +319,104 @@ if selected == "Task":
                 
         elif selected2 =="Depth Estimation":
             st.title("Depth Estmation")
+            file = st.file_uploader( "이미지를 올려주세요",type = ['jpg', 'png'])  # 파일을 첨부하는 영역
+
+            to_tensor = transforms.ToTensor()
+            model_path = os.path.join("models", "mono_640x192") # args.model_name
+            encoder_path =  os.path.join(model_path, "encoder.pth")
+            depth_decoder_path = os.path.join(model_path, "depth.pth")
+            encoder = ResnetEncoder(18, False)
+            loaded_dict_enc = torch.load(encoder_path, map_location=device)
+
+            # extract the height and width of image that this model was trained with
+            feed_height = loaded_dict_enc['height']
+            feed_width = loaded_dict_enc['width']
+            filtered_dict_enc = {k: v for k, v in loaded_dict_enc.items() if k in encoder.state_dict()}
+            encoder.load_state_dict(filtered_dict_enc)
+            encoder.to(device)
+            encoder.eval()
+
+            print("Loading pretrained decoder")
+            depth_decoder = networks.DepthDecoder(
+                num_ch_enc=encoder.num_ch_enc, scales=range(4))
+
+            loaded_dict = torch.load(depth_decoder_path, map_location=device)
+            depth_decoder.load_state_dict(loaded_dict)
+
+            depth_decoder.to(device)
+            depth_decoder.eval()
+            
+            if file is None:
+                st.text('')
+            else:
+             # 원본 이미지와 빛번짐 제거 결과를 나란히 배치
+                 columns = st.columns(2)
+                 columns[0].image(Image.open(file), caption="Original Image", use_column_width=True)
+                 img = Image.open(file).convert('RGB')
+                 original_width, original_height = img.size
+                 img = img.resize((feed_width, feed_height), Image.LANCZOS)
+                 img  = to_tensor(img).unsqueeze(0).to(device)
+
+                 with torch.no_grad():
+                    features = encoder(img)
+                    outputs = depth_decoder(features)
+                    disp = outputs[("disp", 0)]
+                    disp_resized = torch.nn.functional.interpolate(
+                    disp, (original_height, original_width), mode="bilinear", align_corners=False)
+            
+                    disp_resized_np = disp_resized.squeeze().cpu().numpy()
+                    vmax = np.percentile(disp_resized_np, 95)
+                    normalizer = mpl.colors.Normalize(vmin=disp_resized_np.min(), vmax=vmax)
+                    mapper = cm.ScalarMappable(norm=normalizer, cmap='magma')
+                    colormapped_im = (mapper.to_rgba(disp_resized_np)[:, :, :3] * 255).astype(np.uint8)
+                    im = Image.fromarray(colormapped_im)
+
+                    disparity_map_dir = './disparity_map_dir'
+                    os.makedirs(disparity_map_dir, exist_ok=True)
+                    output_name = "Depth_Estimation"
+                    name_dest_im = os.path.join(disparity_map_dir, "{}_disp.jpeg".format(output_name))
+                    im.save(name_dest_im)
+
+                    columns[1].image(Image.open('./disparity_map_dir/Depth_Estimation_disp.jpeg'), caption="Depth Estimation", use_column_width=True)
+    
+        elif selected2 == "2-Stage Instance Segmentation":
+            
+            st.title("2-Stage Instance Segmentation")
+            file = st.file_uploader( "이미지를 올려주세요",type = ['jpg', 'png'])  # 파일을 첨부하는 영역
+
+            to_tensor = transforms.ToTensor()
+
+            if file is None:
+                st.text('')
+            else:
+            # 원본 이미지와 빛번짐 제거 결과를 나란히 배치
+                columns = st.columns(2)  # 이미지를 2개의 칼럼에 배치하도록 설정
+
+            # 원본 이미지 표시
+                columns[0].image(Image.open(file), caption="Original Image", use_column_width=True)
+                img = to_tensor(Image.open(file))
+                results = remove_flare.remove_flare(model, img)
+                utils.save_outputs(results, 'test')
+
+                config_path = './pretrained/rtmdet-ins_x_8xb16-300e_coco.py'
+                weight_path = './pretrained/rtmdet-ins_x_8xb16-300e_coco_20221124_111313-33d4595b.pth'
+    
+                removed_image_path = os.path.join('./result/pred_blend', 'test.jpg')
+                removed_image = cv2.imread(removed_image_path)
+    
+                with torch.no_grad():
+                    ins_model = init_detector(config=config_path, checkpoint=weight_path, device='cuda')
+            
+                    pred = get_detected_img(ins_model, removed_image)
+        
+                    ins_dir = './ins_dir'
+                    os.makedirs(ins_dir, exist_ok=True)
+                    ins_path = os.path.join(ins_dir, f'ins.png')
+                    plt.imsave(ins_path, pred)
+                    columns[1].image(Image.open('./ins_dir/ins.png'), caption="2-Stage Instance Segmentation", use_column_width=True)               
+                                
+        elif selected2 =="2-Stage Depth Estimation":
+            st.title("2-Stage Depth Estimation")
             file = st.file_uploader( "이미지를 올려주세요",type = ['jpg', 'png'])  # 파일을 첨부하는 영역
 
             to_tensor = transforms.ToTensor()
@@ -356,9 +483,7 @@ if selected == "Task":
             
                     disparity_map_path = os.path.join(disparity_map_dir, f'disparity_map.png')
                     plt.imsave(disparity_map_path, normalized_prediction, cmap='gray')
-                    columns[1].image(Image.open('./disparity_map_dir/disparity_map.png'), caption="Depth Estimation", use_column_width=True)
-            
-                   
+                    columns[1].image(Image.open('./disparity_map_dir/disparity_map.png'), caption="Depth Estimation", use_column_width=True)       
                 
     with empty2:
         empty()

@@ -41,7 +41,7 @@ def remove_flare(model, image):
         pred_flare = synthesis.remove_flare(inputs, pred_scene)
 
     pred_blend = synthesis.blend_light_source(inputs.cpu(), pred_scene.cpu())
-
+    
     return dict(
         input=inputs.cpu(),
         pred_blend=pred_blend.cpu(),
