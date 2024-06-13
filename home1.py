@@ -271,12 +271,12 @@ if selected == "Task":
 
             # 원본 이미지 표시
                 columns[0].image(Image.open(file), caption="Original Image", use_column_width=True)
-
+                image = Image.open(file)
             # 빛번짐 제거 결과 이미지 표시
                 img = to_tensor(Image.open(file))
                 results = remove_flare.remove_flare(model, img)
                 utils.save_outputs(results, 'test')
-                columns[1].image(Image.open('./result/pred_blend/test.jpg'), caption="Removed Flare", use_column_width=True)
+                columns[1].image(Image.open('./result/pred_blend/test.jpg').resize((image.size[0], image.size[1])), caption="Removed Flare", use_column_width=True)
     
     
         elif selected2 == "Instance Segmentation":
@@ -291,7 +291,7 @@ if selected == "Task":
             else:
             # 원본 이미지와 빛번짐 제거 결과를 나란히 배치
                 columns = st.columns(2)  # 이미지를 2개의 칼럼에 배치하도록 설정
-
+                image = Image.open(file)
             # 원본 이미지 표시
                 columns[0].image(Image.open(file), caption="Original Image", use_column_width=True)
                 img = to_tensor(Image.open(file))
@@ -313,7 +313,7 @@ if selected == "Task":
                     os.makedirs(ins_dir, exist_ok=True)
                     ins_path = os.path.join(ins_dir, f'ins.png')
                     plt.imsave(ins_path, pred)
-                    columns[1].image(Image.open('./ins_dir/ins.png'), caption="Instance Segmentation", use_column_width=True)
+                    columns[1].image(Image.open('./ins_dir/ins.png').resize((image.size[0], image.size[1])), caption="Instance Segmentation", use_column_width=True)
             
             
                 
@@ -352,6 +352,7 @@ if selected == "Task":
              # 원본 이미지와 빛번짐 제거 결과를 나란히 배치
                  columns = st.columns(2)
                  columns[0].image(Image.open(file), caption="Original Image", use_column_width=True)
+                 image = Image.open(file)
                  img = Image.open(file).convert('RGB')
                  original_width, original_height = img.size
                  img = img.resize((feed_width, feed_height), Image.LANCZOS)
@@ -377,7 +378,7 @@ if selected == "Task":
                     name_dest_im = os.path.join(disparity_map_dir, "{}_disp.jpeg".format(output_name))
                     im.save(name_dest_im)
 
-                    columns[1].image(Image.open('./disparity_map_dir/Depth_Estimation_disp.jpeg'), caption="Depth Estimation", use_column_width=True)
+                    columns[1].image(Image.open('./disparity_map_dir/Depth_Estimation_disp.jpeg').resize((image.size[0], image.size[1])), caption="Depth Estimation", use_column_width=True)
     
         elif selected2 == "2-Stage Instance Segmentation":
             
@@ -391,7 +392,7 @@ if selected == "Task":
             else:
             # 원본 이미지와 빛번짐 제거 결과를 나란히 배치
                 columns = st.columns(2)  # 이미지를 2개의 칼럼에 배치하도록 설정
-
+                image = Image.open(file)
             # 원본 이미지 표시
                 columns[0].image(Image.open(file), caption="Original Image", use_column_width=True)
                 img = to_tensor(Image.open(file))
@@ -413,7 +414,7 @@ if selected == "Task":
                     os.makedirs(ins_dir, exist_ok=True)
                     ins_path = os.path.join(ins_dir, f'ins.png')
                     plt.imsave(ins_path, pred)
-                    columns[1].image(Image.open('./ins_dir/ins.png'), caption="2-Stage Instance Segmentation", use_column_width=True)               
+                    columns[1].image(Image.open('./ins_dir/ins.png').resize((image.size[0], image.size[1])), caption="2-Stage Instance Segmentation", use_column_width=True)               
                                 
         elif selected2 =="2-Stage Depth Estimation":
             st.title("2-Stage Depth Estimation")
@@ -426,6 +427,7 @@ if selected == "Task":
             else:
              # 원본 이미지와 빛번짐 제거 결과를 나란히 배치
                  columns = st.columns(2)
+                 image = Image.open(file)
                  columns[0].image(Image.open(file), caption="Original Image", use_column_width=True)
                  img = to_tensor(Image.open(file))
                  results = remove_flare.remove_flare(model, img)
@@ -483,7 +485,7 @@ if selected == "Task":
             
                     disparity_map_path = os.path.join(disparity_map_dir, f'disparity_map.png')
                     plt.imsave(disparity_map_path, normalized_prediction, cmap='gray')
-                    columns[1].image(Image.open('./disparity_map_dir/disparity_map.png'), caption="Depth Estimation", use_column_width=True)       
+                    columns[1].image(Image.open('./disparity_map_dir/disparity_map.png').resize((image.size[0], image.size[1])), caption="Depth Estimation", use_column_width=True)       
                 
     with empty2:
         empty()
